@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tab Caretaker Store Assets</title>
+    <style>
+      :root {
+        font-family: Inter, "PingFang SC", "Microsoft YaHei", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: #152034;
+        background: #edf2ff;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+      body { background: #edf2ff; }
+
+      .asset {
+        position: relative;
+        display: grid;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        background: #edf2ff;
+      }
+
+      .screenshot {
+        grid-template-columns: 410px minmax(0, 1fr);
+        gap: 70px;
+        align-items: center;
+        padding: 72px 74px;
+      }
+
+      .screenshot::before,
+      .screenshot::after {
+        position: absolute;
+        border-radius: 50%;
+        background: #dbe5ff;
+        content: "";
+      }
+
+      .screenshot::before { top: -180px; left: -120px; width: 430px; height: 430px; }
+      .screenshot::after { right: -110px; bottom: -250px; width: 520px; height: 520px; background: #cfdcff; }
+
+      .copy { position: relative; z-index: 2; }
+      .brand { display: flex; align-items: center; gap: 15px; margin-bottom: 48px; }
+      .brand img { width: 48px; height: 48px; }
+      .brand strong { font-size: 20px; font-weight: 720; letter-spacing: -0.02em; }
+      h1 { max-width: 390px; margin: 0; font-size: 54px; font-weight: 760; line-height: 1.12; letter-spacing: -0.035em; }
+      .copy > p { max-width: 360px; margin: 24px 0 0; color: #536077; font-size: 20px; line-height: 1.6; }
+      .proof { display: flex; gap: 22px; margin-top: 34px; color: #29469b; font-size: 15px; font-weight: 680; }
+      .proof span { display: inline-flex; align-items: center; gap: 8px; }
+      .proof i { width: 8px; height: 8px; border-radius: 50%; background: #3458e6; }
+
+      .browser {
+        position: relative;
+        z-index: 2;
+        overflow: hidden;
+        border: 1px solid #c7d1e2;
+        border-radius: 18px;
+        background: #ffffff;
+        box-shadow: 0 28px 70px rgb(32 50 88 / 18%);
+      }
+
+      .browser-bar {
+        display: grid;
+        grid-template-columns: 60px minmax(0, 1fr) 60px;
+        gap: 14px;
+        align-items: center;
+        height: 54px;
+        padding: 0 16px;
+        border-bottom: 1px solid #e1e6ef;
+        background: #f6f8fc;
+      }
+
+      .traffic { display: flex; gap: 7px; }
+      .traffic i { width: 10px; height: 10px; border-radius: 50%; background: #c7d1e2; }
+      .traffic i:nth-child(1) { background: #ff7567; }
+      .traffic i:nth-child(2) { background: #f4bf50; }
+      .traffic i:nth-child(3) { background: #55c779; }
+      .address { height: 29px; border: 1px solid #e1e6ef; border-radius: 8px; background: #ffffff; }
+      .browser-tools { display: flex; justify-content: flex-end; gap: 7px; }
+      .browser-tools i { width: 8px; height: 8px; border-radius: 50%; background: #8f9ab0; }
+      .browser-body { position: relative; height: calc(100% - 54px); background: #f0f3f9; }
+
+      .duplicate .browser { width: 650px; height: 640px; justify-self: end; }
+      .duplicate .browser-body { background: #e8edf7; }
+      .duplicate .page-lines { position: absolute; inset: 42px auto auto 42px; width: 250px; }
+      .page-lines i { display: block; height: 12px; margin-bottom: 16px; border-radius: 4px; background: #d7deeb; }
+      .page-lines i:nth-child(2) { width: 78%; }
+      .page-lines i:nth-child(3) { width: 90%; }
+      .duplicate .ui-shot {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 380px;
+        height: 520px;
+        object-fit: cover;
+        border: 1px solid #344058;
+        box-shadow: 0 22px 45px rgb(21 32 52 / 25%);
+      }
+
+      .groups .browser { width: 650px; height: 640px; justify-self: end; }
+      .groups .browser-body { display: grid; grid-template-columns: minmax(0, 1fr) 310px; }
+      .groups .workspace { padding: 40px 34px; background: #ffffff; }
+      .workspace h3 { margin: 0 0 22px; color: #152034; font-size: 18px; }
+      .workspace .tab-strip { display: flex; gap: 10px; margin-bottom: 30px; }
+      .workspace .tab-strip i { width: 86px; height: 25px; border-radius: 7px; background: #dfe7ff; }
+      .workspace .tab-strip i:nth-child(2) { background: #e9f7f2; }
+      .workspace .tab-strip i:nth-child(3) { background: #f3e8ff; }
+      .workspace .content-line { height: 12px; margin-bottom: 14px; border-radius: 4px; background: #e9edf4; }
+      .workspace .content-line:nth-child(5) { width: 72%; }
+      .groups .ui-shot { width: 310px; height: 586px; object-fit: cover; object-position: top; border-left: 1px solid #c7d1e2; }
+
+      .archive .browser { width: 720px; height: 610px; justify-self: end; background: #11151d; }
+      .archive .browser-bar { border-color: #2d3748; background: #181d27; }
+      .archive .address { border-color: #2d3748; background: #202633; }
+      .archive .browser-body { background: #11151d; }
+      .archive .ui-shot { width: 100%; height: 556px; object-fit: cover; object-position: top; }
+
+      .themes { grid-template-columns: 390px minmax(0, 1fr); gap: 50px; padding-right: 54px; }
+      .themes .browser { width: 690px; height: 620px; justify-self: end; }
+      .themes .browser-body { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; padding: 22px; background: #f0f3f9; }
+      .themes .theme-card { overflow: hidden; border: 1px solid #c7d1e2; background: #ffffff; box-shadow: 0 10px 24px rgb(32 50 88 / 10%); }
+      .themes .theme-card.dark { border-color: #2d3748; background: #11151d; }
+      .themes .ui-shot { width: 100%; height: 520px; object-fit: cover; object-position: top; }
+
+      .promo {
+        align-items: center;
+        color: #f1f4fb;
+        background: #111827;
+      }
+
+      .promo::after {
+        position: absolute;
+        right: -14%;
+        bottom: -76%;
+        width: 70%;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background: #2948c7;
+        content: "";
+      }
+
+      .promo .promo-brand { position: relative; z-index: 2; display: flex; align-items: center; }
+      .promo .promo-brand img { flex: none; }
+      .promo h2 { margin: 0; font-weight: 760; letter-spacing: -0.035em; }
+      .promo p { margin: 0; color: #c1ccff; font-weight: 540; }
+      .promo .stack-mark { position: absolute; z-index: 1; opacity: 0.18; }
+      .promo .stack-mark i { position: absolute; display: block; border: 2px solid #dbe5ff; border-radius: 18px; }
+
+      .promo-small { padding: 38px; }
+      .promo-small .promo-brand { gap: 18px; }
+      .promo-small .promo-brand img { width: 64px; height: 64px; }
+      .promo-small h2 { font-size: 31px; line-height: 1.08; }
+      .promo-small p { margin-top: 10px; font-size: 15px; }
+      .promo-small .stack-mark { top: -16px; right: 102px; }
+      .promo-small .stack-mark i { width: 132px; height: 88px; }
+      .promo-small .stack-mark i:nth-child(2) { transform: translate(24px, 25px); }
+      .promo-small .stack-mark i:nth-child(3) { transform: translate(48px, 50px); }
+
+      .promo-marquee { grid-template-columns: 1fr 600px; gap: 70px; padding: 70px 100px; }
+      .promo-marquee .promo-brand { gap: 24px; }
+      .promo-marquee .promo-brand img { width: 92px; height: 92px; }
+      .promo-marquee h2 { font-size: 58px; line-height: 1.05; }
+      .promo-marquee p { margin-top: 18px; font-size: 21px; }
+      .promo-marquee .preview { position: relative; z-index: 2; justify-self: end; width: 560px; height: 420px; overflow: hidden; border: 1px solid #47556d; border-radius: 18px; background: #181d27; box-shadow: 0 26px 60px rgb(0 0 0 / 28%); }
+      .promo-marquee .preview img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+      .promo-marquee .stack-mark { top: -30px; right: 470px; }
+      .promo-marquee .stack-mark i { width: 240px; height: 150px; }
+      .promo-marquee .stack-mark i:nth-child(2) { transform: translate(44px, 42px); }
+      .promo-marquee .stack-mark i:nth-child(3) { transform: translate(88px, 84px); }
+
+      .store-icon { place-items: center; background: transparent; }
+      .store-icon img { width: 96px; height: 96px; }
+    </style>
+  </head>
+  <body>
+    <main id="asset" class="asset screenshot duplicate">
+      <section class="copy">
+        <div class="brand"><img src="../../design/icon-source.svg" alt="" /><strong>Tab Caretaker</strong></div>
+        <h1 id="headline">重复标签，及时拦住</h1>
+        <p id="description">切回已有页面，也能一键清理当前重复标签。</p>
+        <div class="proof"><span><i></i>本地优先</span><span><i></i>不读取网页正文</span></div>
+      </section>
+
+      <section class="browser" aria-label="产品界面">
+        <div class="browser-bar">
+          <div class="traffic"><i></i><i></i><i></i></div>
+          <div class="address"></div>
+          <div class="browser-tools"><i></i><i></i><i></i></div>
+        </div>
+        <div class="browser-body" id="browser-body">
+          <div class="page-lines"><i></i><i></i><i></i></div>
+          <img class="ui-shot" id="ui-primary" src="../../.impeccable/review/popup-dark.png" alt="Tab Caretaker 弹窗界面" />
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const scene = new URLSearchParams(location.search).get('scene') || 'duplicate';
+      const root = document.querySelector('#asset');
+      const headline = document.querySelector('#headline');
+      const description = document.querySelector('#description');
+      const browserBody = document.querySelector('#browser-body');
+      const primary = document.querySelector('#ui-primary');
+
+      const screenshots = {
+        duplicate: {
+          title: '重复标签，及时拦住',
+          description: '切回已有页面，也能一键清理当前重复标签。',
+        },
+        groups: {
+          title: '分组与未分组，一眼看清',
+          description: '所有窗口标签集中在侧边栏，搜索后直接切换。',
+          body: '<div class="workspace"><h3>正在处理的工作</h3><div class="tab-strip"><i></i><i></i><i></i></div><div class="content-line"></div><div class="content-line"></div><div class="content-line"></div></div><img class="ui-shot" src="../../.impeccable/review/sidepanel.png" alt="标签侧边栏界面" />',
+        },
+        archive: {
+          title: '关闭前，先安全归档',
+          description: '闲置标签保存在本机，可随时搜索并恢复。',
+          body: '<img class="ui-shot" src="../../.impeccable/review/options-dark.png" alt="本地归档与恢复界面" />',
+        },
+        themes: {
+          title: '浅色深色，自动跟随',
+          description: '弹窗、侧边栏和设置页保持一致的 Coco 主题。',
+          body: '<div class="theme-card"><img class="ui-shot" src="../../.impeccable/review/sidepanel.png" alt="浅色侧边栏" /></div><div class="theme-card dark"><img class="ui-shot" src="../../.impeccable/review/sidepanel-dark.png" alt="深色侧边栏" /></div>',
+        },
+      };
+
+      if (scene === 'icon') {
+        document.documentElement.style.background = 'transparent';
+        document.body.style.background = 'transparent';
+        root.className = 'asset store-icon';
+        root.innerHTML = '<img src="../../design/icon-source.svg" alt="">';
+      } else if (scene === 'promo-small' || scene === 'promo-marquee') {
+        root.className = `asset promo ${scene}`;
+        root.innerHTML = scene === 'promo-small'
+          ? '<div class="promo-brand"><img src="../../design/icon-source.svg" alt=""><div><h2>Tab Caretaker</h2><p>去重 · 分组 · 搜索 · 归档</p></div></div><div class="stack-mark"><i></i><i></i><i></i></div>'
+          : '<div><div class="promo-brand"><img src="../../design/icon-source.svg" alt=""><div><h2>让标签保持清爽</h2><p>Tab Caretaker · 本地优先的 Chrome 标签管家</p></div></div></div><div class="preview"><img src="../../.impeccable/review/options-dark.png" alt="本地归档设置"></div><div class="stack-mark"><i></i><i></i><i></i></div>';
+      } else {
+        const config = screenshots[scene] || screenshots.duplicate;
+        root.className = `asset screenshot ${scene}`;
+        headline.textContent = config.title;
+        description.textContent = config.description;
+        if (config.body) browserBody.innerHTML = config.body;
+        if (config.src) primary.src = config.src;
+      }
+    </script>
+  </body>
+</html>
