@@ -44,6 +44,21 @@ pnpm dev
 
 提交贡献即表示你同意按本项目的 [MIT License](LICENSE) 提供该贡献。
 
+## 发布流程（维护者）
+
+1. 在 Pull Request 中更新 `package.json` 版本，并确保变更已通过 CI、审查并合并到 `main`。
+2. 更新本地主分支，创建与包版本完全一致的附注标签：
+
+   ```bash
+   git switch main
+   git pull --ff-only
+   git tag -a v0.1.0 -m "Tab Caretaker v0.1.0"
+   git push origin v0.1.0
+   ```
+
+3. `Release` 工作流会再次执行类型检查和测试，运行 `pnpm zip`，生成 `SHA256SUMS.txt`，并创建 GitHub Release。
+4. 在 Releases 页面确认 ZIP 和校验文件可下载。标签版本与 `package.json` 不一致时，工作流会失败且不会发布。
+
 ## English summary
 
-Create a focused branch from the latest `main`, add tests and documentation for behavior changes, run `pnpm check && pnpm test && pnpm build`, and open a pull request. CI, one approving review, and resolved conversations are required. Contributions are provided under the MIT License.
+Create a focused branch from the latest `main`, add tests and documentation for behavior changes, run `pnpm check && pnpm test && pnpm build`, and open a pull request. CI, one approving review, and resolved conversations are required. Maintainers publish releases by pushing a `v*` tag matching `package.json`. Contributions are provided under the MIT License.
