@@ -1,6 +1,7 @@
 # Tab Caretaker（标签管家）
 
 [![CI](https://github.com/halvee-tech/tab-caretaker/actions/workflows/ci.yml/badge.svg)](https://github.com/halvee-tech/tab-caretaker/actions/workflows/ci.yml)
+[![GitHub Release](https://img.shields.io/github/v/release/halvee-tech/tab-caretaker?color=3458e6)](https://github.com/halvee-tech/tab-caretaker/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3458e6.svg)](LICENSE)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Manifest_V3-3458e6.svg)](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3)
 
@@ -29,23 +30,22 @@
 - **保护规则**：活动、固定、播放媒体、手动保护和白名单标签不会被自动归档。
 - **自适应主题**：自动跟随浏览器/系统的浅色或深色偏好。
 
-## 安装
+## 下载与安装
 
-目前项目尚未发布到 Chrome Web Store，可通过开发者模式安装：
+项目尚未发布到 Chrome Web Store，但用户无需 clone 仓库或自行构建：
 
-1. 安装 [Node.js 22+](https://nodejs.org/) 与 [pnpm 10+](https://pnpm.io/)。
-2. 克隆并构建：
-
-   ```bash
-   git clone https://github.com/halvee-tech/tab-caretaker.git
-   cd tab-caretaker
-   pnpm install
-   pnpm build
-   ```
-
+1. 打开 [Releases](https://github.com/halvee-tech/tab-caretaker/releases/latest)，下载 `tab-caretaker-<版本>-chrome.zip`。
+2. 解压 ZIP；其中 `manifest.json` 应位于解压目录根部。
 3. 打开 `chrome://extensions`，开启“开发者模式”。
-4. 点击“加载已解压的扩展程序”，选择 `.output/chrome-mv3`。
-5. 后续重新构建后，在扩展卡片上点击“重新加载”。
+4. 点击“加载已解压的扩展程序”，选择刚才的解压目录。
+
+Release 同时提供 `SHA256SUMS.txt`。需要验证文件完整性时，将它与 ZIP 放在同一目录后运行：
+
+```bash
+shasum -a 256 -c SHA256SUMS.txt
+```
+
+Chrome 不允许直接安装外部未签名 ZIP，因此在扩展上架 Chrome Web Store 前，仍需解压并通过开发者模式加载。
 
 ## 使用说明
 
@@ -94,6 +94,10 @@ pnpm zip         # 生成可分发压缩包
 ```
 
 技术栈：Manifest V3、WXT、React、TypeScript、Vitest。
+
+## 自动发布
+
+维护者推送与 `package.json` 版本一致的 `v*` 标签后，GitHub Actions 会自动执行类型检查、测试和 Chrome 打包，并创建包含 ZIP、校验文件及自动生成说明的 GitHub Release。发布步骤记录在 [贡献指南](CONTRIBUTING.md#发布流程维护者)。
 
 ## 参与贡献
 
