@@ -1,0 +1,95 @@
+#root { min-height: 100%; }
+
+.app {
+  width: 380px;
+  padding: 17px 18px 13px;
+  color: var(--color-ink);
+  background: var(--color-surface);
+}
+
+.topbar { display: grid; grid-template-columns: 36px minmax(0, 1fr) 40px; gap: 11px; align-items: center; }
+.brand-mark { position: relative; width: 36px; height: 36px; }
+.brand-mark span { position: absolute; width: 25px; height: 18px; border: 1.5px solid #9eb4ec; border-radius: 6px; background: #d9e5ff; box-shadow: 0 3px 8px rgb(41 72 199 / 8%); }
+.brand-mark span:nth-child(1) { top: 1px; left: 1px; border-color: #a8b9e5; background: #f5f8ff; }
+.brand-mark span:nth-child(2) { top: 8px; left: 5px; border-color: #6e8de8; background: #c7d7ff; }
+.brand-mark span:nth-child(3) { top: 15px; left: 10px; border-color: #3458e6; background: #3458e6; }
+
+h1, p { margin: 0; }
+h1 { font-size: 15px; font-weight: 700; line-height: 1.25; letter-spacing: -0.025em; }
+.brand-copy p { margin-top: 3px; color: var(--color-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+
+.icon-button { display: grid; width: 40px; height: 40px; padding: 0; place-items: center; border: 0; border-radius: 9px; color: var(--color-muted); background: transparent; cursor: pointer; transition: color 150ms ease, background 150ms ease; }
+.icon-button:hover { color: var(--color-accent); background: var(--color-accent-soft); }
+.icon-button:active { background: var(--color-control-pressed); }
+.icon-button svg, .search-box svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+
+.search-box { display: grid; grid-template-columns: 18px 1fr; gap: 7px; align-items: center; margin-top: 12px; padding: 0 10px; border: 1px solid var(--color-border-strong); border-radius: 9px; color: var(--color-muted); background: var(--color-subtle); transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease; }
+.search-box svg { width: 17px; height: 17px; }
+.search-box:focus-within { border-color: var(--color-focus); background: var(--color-surface); box-shadow: 0 0 0 3px var(--color-focus-soft); }
+.search-box input { min-width: 0; height: 34px; padding: 0; border: 0; outline: 0; color: var(--color-ink); background: transparent; font-size: 11px; }
+.search-box input:focus-visible { outline: 0; }
+.search-box input:disabled { cursor: wait; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+.state-message { padding: 26px 2px 15px; color: var(--color-muted); font-size: 12px; }
+.error-state { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-top: 13px; padding: 12px; border-radius: 10px; background: var(--color-error-soft); }
+.error-state p { color: var(--color-error); font-size: 11px; }
+.error-state button { min-width: 52px; min-height: 38px; padding: 0 10px; border: 1px solid var(--color-error-border); border-radius: 8px; color: var(--color-error); background: var(--color-surface); font-size: 11px; font-weight: 700; cursor: pointer; }
+
+.quick-status { display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-top: 12px; padding: 12px 1px 11px; border-bottom: 1px solid var(--color-border); }
+.quick-status p { color: var(--color-muted); font-size: 11px; white-space: nowrap; }
+.quick-status p strong { color: var(--color-ink); font-size: 12px; font-variant-numeric: tabular-nums; }
+.quick-status p span { margin: 0 3px; color: var(--color-separator); }
+.quick-actions { display: flex; flex: 0 0 auto; gap: 6px; align-items: center; }
+.quick-status button { min-height: 34px; padding: 0 10px; border: 1px solid transparent; border-radius: 8px; color: var(--color-accent); background: var(--color-accent-soft); font-size: 11px; font-weight: 700; cursor: pointer; transition: background 150ms ease, transform 150ms ease; }
+.quick-status button.primary-action { color: var(--color-on-accent); background: var(--color-accent); box-shadow: 0 4px 12px rgb(52 88 230 / 18%); }
+.quick-status button:hover { background: var(--color-control-hover); }
+.quick-status button.primary-action:hover { background: var(--color-accent-strong); transform: translateY(-1px); }
+.tidy-state { color: var(--color-muted); font-size: 10px; }
+
+.duplicate-feedback { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-top: 10px; padding: 11px 12px; border-radius: 10px; color: var(--color-accent-ink); background: var(--color-accent-soft); }
+.duplicate-feedback strong, .duplicate-feedback span { display: block; }
+.duplicate-feedback strong { font-size: 11px; }
+.duplicate-feedback span { margin-top: 2px; color: var(--color-accent-muted); font-size: 10px; }
+.duplicate-feedback button { flex: 0 0 auto; min-height: 36px; padding: 0 10px; border: 0; border-radius: 8px; color: var(--color-on-accent); background: var(--color-accent); font-size: 10px; font-weight: 700; cursor: pointer; }
+.duplicate-feedback button:hover { background: var(--color-accent-strong); }
+
+.automation-controls { margin-top: 3px; border-bottom: 1px solid var(--color-border); }
+.automation-controls label { display: flex; min-height: 46px; align-items: center; justify-content: space-between; color: var(--color-body); font-size: 12px; font-weight: 600; cursor: pointer; }
+.automation-controls .described-setting { min-height: 60px; }
+.automation-controls label + label { border-top: 1px solid var(--color-border); }
+.setting-copy strong, .setting-copy small { display: block; }
+.setting-copy strong { color: var(--color-body); font-size: 12px; }
+.setting-copy small { margin-top: 4px; color: var(--color-muted); font-size: 10px; font-weight: 400; }
+.automation-controls input { position: relative; flex: 0 0 auto; width: 36px; height: 22px; margin: 0; border: 0; border-radius: 999px; appearance: none; background: var(--color-toggle-off); cursor: pointer; transition: background 160ms ease; }
+.automation-controls input::after { position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--color-surface); box-shadow: 0 1px 3px rgb(21 32 52 / 20%); content: ''; transition: transform 160ms ease; }
+.automation-controls input:checked { background: var(--color-accent); }
+.automation-controls input:checked::after { transform: translateX(14px); }
+.automation-controls input:disabled { cursor: wait; }
+
+.search-results { margin-top: 11px; }
+.result-count { padding: 2px 2px 9px; color: var(--color-muted); font-size: 10px; }
+.search-results ul { max-height: 300px; margin: 0; padding: 0; overflow-y: auto; border-top: 1px solid var(--color-border); list-style: none; }
+.search-results li { border-bottom: 1px solid var(--color-border); }
+.search-results button { width: 100%; min-height: 56px; padding: 9px 7px; border: 0; border-radius: 8px; color: var(--color-ink); background: transparent; text-align: left; cursor: pointer; }
+.search-results button:hover { background: var(--color-subtle); }
+.search-results button span, .search-results button small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.search-results button span { font-size: 12px; font-weight: 650; }
+.search-results button small { margin-top: 4px; color: var(--color-muted); font-size: 10px; }
+.empty-state { padding: 23px 2px 13px; color: var(--color-muted); font-size: 11px; line-height: 1.6; }
+
+.notice { margin-top: 9px; padding: 9px 11px; border-radius: 9px; font-size: 11px; line-height: 1.45; }
+.notice.success { color: var(--color-success); background: var(--color-success-soft); }
+.notice.error { color: var(--color-error); background: var(--color-error-soft); }
+
+.footer-bar { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-top: 7px; padding-top: 7px; }
+.footer-bar button { min-height: 38px; padding: 0 5px; border: 0; color: var(--color-muted); background: transparent; font-size: 11px; cursor: pointer; transition: color 150ms ease; }
+.footer-bar button:hover { color: var(--color-accent); }
+.footer-bar .undo-button { color: var(--color-accent); font-weight: 650; }
+
+button:focus-visible, input:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+button:disabled { cursor: wait; opacity: 0.55; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+}
