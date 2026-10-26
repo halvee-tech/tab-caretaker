@@ -1,80 +1,116 @@
 # Tab Caretaker（标签管家）
 
-Tab Caretaker is a local-first browser extension for people who work with many tabs. It is designed to automatically organize tabs, prevent accidental duplicates, and safely archive inactive pages before closing them.
+[![CI](https://github.com/halvee-tech/tab-caretaker/actions/workflows/ci.yml/badge.svg)](https://github.com/halvee-tech/tab-caretaker/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-3458e6.svg)](LICENSE)
+[![Chrome MV3](https://img.shields.io/badge/Chrome-Manifest_V3-3458e6.svg)](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3)
 
-Tab Caretaker 是一个本地优先的浏览器标签管理扩展：自动整理标签页、防止无意重复，并在关闭长期未查看的页面前安全归档。
+一个本地优先的 Chrome 标签管理扩展：拦截无意产生的重复标签、按域名整理标签、跨窗口搜索，并在关闭长期闲置页面前安全归档。
 
-## Product principles
+> Local-first Chrome extension for deduplicating, grouping, searching, and safely archiving tabs. English overview is available below.
 
-- Automate without taking control away from the user.
-- Prevent accidental duplicates while allowing intentional copies.
-- Archive before closing and make automated actions reversible.
-- Keep tab metadata on the user's device by default.
+![Tab Caretaker popup](.impeccable/review/popup.png)
 
-## Core features
+## 为什么做它
 
-- Manual or optional automatic grouping by domain.
-- Duplicate-tab guard with intentional-copy exceptions and a dedicated “copy and keep” context-menu action.
-- One-click cleanup for duplicate tabs that are already open, with batch undo.
-- Search and switch across every browser window.
-- Optional Chrome side panel listing every open tab, with distinct grouped and ungrouped sections.
-- Inactive-tab tracking, local archiving, restoration, and reversible automated actions.
-- Automatic archiving uses a 3-day inactivity threshold by default and remains configurable.
-- Protected tabs, domain allowlists, and a local action history.
+当浏览器里同时存在几十个标签时，真正麻烦的通常不是“打开”，而是重复、查找、整理和安全关闭。Tab Caretaker 将这些操作放在一个轻量插件中，并遵循三个原则：
 
-All browser-changing automation is disabled by default. Manual actions are available immediately, and automated archiving always writes a recoverable local record before closing a tab.
+- 自动化不剥夺控制权；所有改变浏览器状态的自动功能默认关闭。
+- 有意复制的标签应保留，无意重复的标签才拦截。
+- 自动关闭前先本地归档，并尽量让操作可恢复。
 
-## Current capabilities
+## 主要功能
 
-- Versioned local storage with migration from the original settings format and schema v1.
-- Activity tracking for tab creation, activation, updates, removal, and window focus.
-- Conservative protection rules for active, pinned, audible, manually protected, allowlisted, and restricted tabs.
-- URL comparison that normalizes casing and trailing slashes while removing only configured tracking parameters.
-- Intent-aware duplicate guarding for newly created external or linked tabs: address-bar navigation is preserved only when it matches the page active immediately before the new tab, with one-time exemptions for deliberate copies.
-- Local archives with restore/reopen support and a bounded operation history with undo.
-- Manual and optional automatic domain grouping for every web tab, including single-tab domains, with compact one-word labels such as `weixin` or `cooco`.
-- A popup-first workflow for cross-window search, a compact status summary, one-click deduplication, automation switches, and undo. The automatic-grouping switch immediately groups all current web tabs when enabled and removes all groups when disabled.
-- A lightweight secondary page for archive thresholds, advanced rules, and local archives.
-- A live side-panel view with cross-window search, collapsible Chrome tab groups, a separate ungrouped list, and click-to-focus navigation.
+- **重复标签拦截**：再次打开相同地址时切回原标签，并对用户明确复制的场景提供例外。
+- **一键清理已有重复标签**：批量去重，并保留撤销能力。
+- **按域名分组**：可手动启用自动分组；关闭开关时解除当前分组。
+- **跨窗口搜索**：在弹窗中搜索并切换到任意已打开标签。
+- **标签侧边栏**：以 Chrome 原生侧边栏展示分组和未分组标签。
+- **安全归档**：默认以 3 天为闲置阈值，先保存本地记录再关闭，可搜索和恢复。
+- **保护规则**：活动、固定、播放媒体、手动保护和白名单标签不会被自动归档。
+- **自适应主题**：自动跟随浏览器/系统的浅色或深色偏好。
 
-Enable **标签侧边栏** in the popup to open Chrome's native side panel. This setting is off by default; disabling it removes the side-panel entry. The extension requests the `sidePanel` permission for this feature. Tab creation, closure, movement, updates, and group changes refresh the open panel automatically.
+## 安装
 
-## Development
+目前项目尚未发布到 Chrome Web Store，可通过开发者模式安装：
 
-Requirements:
+1. 安装 [Node.js 22+](https://nodejs.org/) 与 [pnpm 10+](https://pnpm.io/)。
+2. 克隆并构建：
 
-- Node.js 22+
-- pnpm 10+
+   ```bash
+   git clone https://github.com/halvee-tech/tab-caretaker.git
+   cd tab-caretaker
+   pnpm install
+   pnpm build
+   ```
+
+3. 打开 `chrome://extensions`，开启“开发者模式”。
+4. 点击“加载已解压的扩展程序”，选择 `.output/chrome-mv3`。
+5. 后续重新构建后，在扩展卡片上点击“重新加载”。
+
+## 使用说明
+
+点击工具栏中的 Tab Caretaker 图标即可：
+
+- 搜索所有窗口中的标签；
+- 查看重复、闲置和受保护标签数量；
+- 一键清理已经存在的重复标签；
+- 开关重复拦截、自动分组、自动归档和标签侧边栏。
+
+高级设置页用于配置闲置天数、受保护域名、忽略的追踪参数，以及查看和恢复本地归档。
+
+## 权限与隐私
+
+Tab Caretaker 不包含内容脚本，不读取网页正文、表单内容或浏览历史；标签元数据和归档记录默认仅保存在本机。
+
+| 权限 | 用途 |
+| --- | --- |
+| `tabs` | 读取、定位、分组、关闭和恢复标签 |
+| `webNavigation` | 区分地址栏导航与网页/外部来源打开 |
+| `storage` | 在本地保存设置、活动记录、归档和撤销历史 |
+| `tabGroups` | 创建、命名和解除 Chrome 标签组 |
+| `alarms` | 定时执行维护与闲置检查 |
+| `contextMenus` | 提供“复制标签页（保留副本）”等明确操作 |
+| `notifications` | 提示重复标签已被拦截并切回原页面 |
+| `sidePanel` | 展示可选的原生标签侧边栏 |
+
+由于扩展不读取页面内容，它无法可靠判断未提交的表单或将下载任务映射到来源标签。因此自动归档默认关闭；重要页面建议固定、手动保护或加入域名白名单。
+
+## 本地开发
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-Load the generated `.output/chrome-mv3-dev` directory from `chrome://extensions` with Developer mode enabled.
+开发模式下，从 `chrome://extensions` 加载 `.output/chrome-mv3-dev`。
 
-After changing permissions or rebuilding, click **Reload** on the extension card before testing.
-
-Useful commands:
+常用命令：
 
 ```bash
-pnpm check
-pnpm test
-pnpm build
-pnpm zip
+pnpm check       # TypeScript 类型检查
+pnpm test        # 单元测试
+pnpm build       # Chrome MV3 生产构建
+pnpm zip         # 生成可分发压缩包
 ```
 
-## Technology
+技术栈：Manifest V3、WXT、React、TypeScript、Vitest。
 
-- Manifest V3
-- WXT
-- React
-- TypeScript
+## 参与贡献
 
-## Current safety boundary
+欢迎提交 Bug、建议和 Pull Request。开始前请阅读：
 
-The extension does not request access to page contents or download history. It therefore cannot reliably detect unsaved form edits or map an in-progress download to its originating tab. Automatic archiving remains off by default; use manual protection or a domain allowlist for pages where that state must be preserved.
+- [贡献指南](CONTRIBUTING.md)
+- [行为准则](CODE_OF_CONDUCT.md)
+- [安全政策](SECURITY.md)
 
-## License
+所有进入 `main` 的变更都应通过 Pull Request、代码审查和 CI；仓库使用 squash merge 保持线性历史。
 
-[MIT](LICENSE)
+## 开源许可
+
+本项目基于 [MIT License](LICENSE) 开源。你可以使用、复制、修改、合并、发布和再分发代码，但必须保留原始版权与许可声明。软件按“原样”提供，不附带任何明示或暗示担保。
+
+## English overview
+
+Tab Caretaker is a local-first Chrome extension for people who work with many tabs. It prevents accidental duplicates, groups tabs by domain, searches across windows, provides a native side-panel view, and archives inactive tabs locally before closing them.
+
+Automation that changes browser state is disabled by default. The extension does not inject content scripts or read page contents. See [CONTRIBUTING.md](CONTRIBUTING.md) to contribute and [LICENSE](LICENSE) for the MIT terms.

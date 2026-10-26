@@ -1,0 +1,46 @@
+name: Bug 报告
+description: 报告可复现的问题
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: 感谢反馈。安全漏洞请不要在这里公开，请使用 Security 页面私密报告。
+  - type: input
+    id: chrome-version
+    attributes:
+      label: Chrome 版本
+      placeholder: 例如 141.0.7390.0
+    validations:
+      required: true
+  - type: input
+    id: extension-version
+    attributes:
+      label: 扩展版本或提交
+      placeholder: 例如 0.1.0 或提交哈希
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 请提供最小、稳定的复现步骤。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期结果
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际结果
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: 截图与补充信息
+      description: 请先移除标签标题、地址或其他隐私信息。

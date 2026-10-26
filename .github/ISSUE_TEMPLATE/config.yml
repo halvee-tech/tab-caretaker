@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 私密安全报告
+    url: https://github.com/halvee-tech/tab-caretaker/security/advisories/new
+    about: 请通过私密入口报告安全漏洞。

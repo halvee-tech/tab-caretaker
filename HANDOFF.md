@@ -1,13 +1,13 @@
 # Tab Caretaker 开发交接
 
-更新时间：2026-10-25
+更新时间：2026-10-26
 
 ## 1. 项目位置
 
 - 本地仓库：`/Users/halveel./halvee/cowork/tab-caretaker`
 - GitHub：https://github.com/halvee-tech/tab-caretaker
 - 当前分支：`main`
-- 远端仓库目前为空，本地代码尚未 commit、尚未 push。
+- 远端仓库已初始化，`main` 已推送并作为默认分支。
 
 ## 2. 产品目标
 
