@@ -4,10 +4,13 @@
 [![GitHub Release](https://img.shields.io/github/v/release/halvee-tech/tab-caretaker?color=3458e6)](https://github.com/halvee-tech/tab-caretaker/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3458e6.svg)](LICENSE)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Manifest_V3-3458e6.svg)](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3)
+[![Chrome Web Store](https://img.shields.io/badge/Chrome_Web_Store-安装扩展-3458e6?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/tab-caretaker/bdegmnmphdkbnooonojbhobpiipgfncb)
 
 一个本地优先的 Chrome 标签管理扩展：拦截无意产生的重复标签、按域名整理标签、跨窗口搜索，并在关闭长期闲置页面前安全归档。
 
 > Local-first Chrome extension for deduplicating, grouping, searching, and safely archiving tabs. English overview is available below.
+
+**已上架 Chrome 应用商店：[一键安装 Tab Caretaker](https://chromewebstore.google.com/detail/tab-caretaker/bdegmnmphdkbnooonojbhobpiipgfncb)**
 
 ![Tab Caretaker popup](.impeccable/review/popup.png)
 
@@ -23,16 +26,24 @@
 
 - **重复标签拦截**：再次打开相同地址时切回原标签，并对用户明确复制的场景提供例外。
 - **一键清理已有重复标签**：批量去重，并保留撤销能力。
-- **按域名分组**：可手动启用自动分组；关闭开关时解除当前分组。
+- **按域名分组**：可手动启用自动分组，保留用户自定义名称；关闭开关时解除当前分组。
 - **跨窗口搜索**：在弹窗中搜索并切换到任意已打开标签。
-- **标签侧边栏**：以 Chrome 原生侧边栏展示分组和未分组标签。
+- **标签侧边栏**：以 Chrome 原生侧边栏展示分组和未分组标签，悬停标签行即可点击关闭。
 - **安全归档**：默认以 3 天为闲置阈值，先保存本地记录再关闭，可搜索和恢复。
 - **保护规则**：活动、固定、播放媒体、手动保护和白名单标签不会被自动归档。
 - **自适应主题**：自动跟随浏览器/系统的浅色或深色偏好。
 
 ## 下载与安装
 
-项目尚未发布到 Chrome Web Store，但用户无需 clone 仓库或自行构建：
+### 从 Chrome 应用商店安装（推荐）
+
+打开 [Tab Caretaker 商店页面](https://chromewebstore.google.com/detail/tab-caretaker/bdegmnmphdkbnooonojbhobpiipgfncb)，点击“添加至 Chrome”即可安装，无需下载源码、构建或开启开发者模式。安装后可在扩展菜单中将 Tab Caretaker 固定到工具栏。
+
+商店版本通过 Chrome 自动更新。GitHub Release 可能先于商店审核发布；具体版本以各自页面为准。
+
+### 从 GitHub Release 手动安装
+
+希望体验最新 Release 或手动加载扩展的用户，可以使用预构建安装包：
 
 1. 打开 [Releases](https://github.com/halvee-tech/tab-caretaker/releases/latest)，下载 `tab-caretaker-<版本>-chrome.zip`。
 2. 解压 ZIP；其中 `manifest.json` 应位于解压目录根部。
@@ -45,7 +56,7 @@ Release 同时提供 `SHA256SUMS.txt`。需要验证文件完整性时，将它�
 shasum -a 256 -c SHA256SUMS.txt
 ```
 
-Chrome 不允许直接安装外部未签名 ZIP，因此在扩展上架 Chrome Web Store 前，仍需解压并通过开发者模式加载。
+GitHub 提供的 ZIP 需要解压并通过开发者模式加载；手动安装的版本需要自行下载新版并重新加载。
 
 ## 使用说明
 
@@ -61,6 +72,8 @@ Chrome 不允许直接安装外部未签名 ZIP，因此在扩展上架 Chrome W
 ## 权限与隐私
 
 Tab Caretaker 不包含内容脚本，不读取网页正文、表单内容或浏览历史；标签元数据和归档记录默认仅保存在本机。
+
+完整说明见 [隐私权政策](https://halvee-tech.github.io/tab-caretaker/PRIVACY.html)。
 
 | 权限 | 用途 |
 | --- | --- |
@@ -116,5 +129,7 @@ pnpm zip         # 生成可分发压缩包
 ## English overview
 
 Tab Caretaker is a local-first Chrome extension for people who work with many tabs. It prevents accidental duplicates, groups tabs by domain, searches across windows, provides a native side-panel view, and archives inactive tabs locally before closing them.
+
+**[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/tab-caretaker/bdegmnmphdkbnooonojbhobpiipgfncb)** for automatic updates. Prebuilt ZIP packages are also available on [GitHub Releases](https://github.com/halvee-tech/tab-caretaker/releases/latest) for manual installation in developer mode. Release and store versions may differ while an update is under review.
 
 Automation that changes browser state is disabled by default. The extension does not inject content scripts or read page contents. See [CONTRIBUTING.md](CONTRIBUTING.md) to contribute and [LICENSE](LICENSE) for the MIT terms.
