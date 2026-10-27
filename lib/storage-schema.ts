@@ -1,7 +1,11 @@
+import {
+  normalizeGroupingParentDomains,
+  type GroupingMode,
+} from './grouping';
 import { DEFAULT_TRACKING_PARAMETERS } from './url-normalization';
 
 export const STORAGE_KEY = 'caretakerState';
-export const CURRENT_SCHEMA_VERSION = 4;
+export const CURRENT_SCHEMA_VERSION = 6;
 export const MAX_ARCHIVES = 1_000;
 export const MAX_ACTION_HISTORY = 200;
 
@@ -10,6 +14,8 @@ export type CaretakerSettings = {
   autoGroupEnabled: boolean;
   domainAllowlist: string[];
   duplicateGuardEnabled: boolean;
+  groupingMode: GroupingMode;
+  groupingParentDomains: string[];
   sidePanelEnabled: boolean;
   staleAfterDays: number;
   trackingParameters: string[];
@@ -25,6 +31,8 @@ export type UserConfigurableSettings = Pick<
       | 'archiveEnabled'
       | 'autoGroupEnabled'
       | 'duplicateGuardEnabled'
+      | 'groupingMode'
+      | 'groupingParentDomains'
       | 'sidePanelEnabled'
     >
   >;
@@ -114,6 +122,8 @@ export const DEFAULT_SETTINGS: CaretakerSettings = {
   autoGroupEnabled: false,
   domainAllowlist: [],
   duplicateGuardEnabled: false,
+  groupingMode: 'hostname',
+  groupingParentDomains: [],
   sidePanelEnabled: false,
   staleAfterDays: 3,
   trackingParameters: [...DEFAULT_TRACKING_PARAMETERS],
@@ -128,6 +138,8 @@ export function createDefaultState(): CaretakerState {
     settings: {
       ...DEFAULT_SETTINGS,
       domainAllowlist: [],
+      groupingMode: 'hostname',
+      groupingParentDomains: [],
       trackingParameters: [...DEFAULT_TRACKING_PARAMETERS],
     },
     tabActivity: {},
@@ -152,6 +164,12 @@ function normalizeStringList(value: unknown, lowercase = false): string[] {
   return result;
 }
 
+function normalizeGroupingMode(value: unknown): GroupingMode {
+  return value === 'registrable-domain' || value === 'third-level-domain'
+    ? value
+    : 'hostname';
+}
+
 export function sanitizeSettings(value: unknown): CaretakerSettings {
   const source = isRecord(value) ? value : {};
   return {
@@ -164,6 +182,8 @@ export function sanitizeSettings(value: unknown): CaretakerSettings {
         ? source.autoGroupEnabled
         : DEFAULT_SETTINGS.autoGroupEnabled,
     domainAllowlist: normalizeStringList(source.domainAllowlist, true),
+    groupingMode: normalizeGroupingMode(source.groupingMode),
+    groupingParentDomains: normalizeGroupingParentDomains(source.groupingParentDomains),
     duplicateGuardEnabled:
       typeof source.duplicateGuardEnabled === 'boolean'
         ? source.duplicateGuardEnabled

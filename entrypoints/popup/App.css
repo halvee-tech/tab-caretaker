@@ -55,17 +55,37 @@ h1 { font-size: 15px; font-weight: 700; line-height: 1.25; letter-spacing: -0.02
 .duplicate-feedback button:hover { background: var(--color-accent-strong); }
 
 .automation-controls { margin-top: 3px; border-bottom: 1px solid var(--color-border); }
-.automation-controls label { display: flex; min-height: 46px; align-items: center; justify-content: space-between; color: var(--color-body); font-size: 12px; font-weight: 600; cursor: pointer; }
+.automation-controls > label,
+.grouping-setting > label { display: flex; min-height: 46px; align-items: center; justify-content: space-between; color: var(--color-body); font-size: 12px; font-weight: 600; cursor: pointer; }
 .automation-controls .described-setting { min-height: 60px; }
-.automation-controls label + label { border-top: 1px solid var(--color-border); }
+.automation-controls > * + * { border-top: 1px solid var(--color-border); }
 .setting-copy strong, .setting-copy small { display: block; }
 .setting-copy strong { color: var(--color-body); font-size: 12px; }
 .setting-copy small { margin-top: 4px; color: var(--color-muted); font-size: 10px; font-weight: 400; }
-.automation-controls input { position: relative; flex: 0 0 auto; width: 36px; height: 22px; margin: 0; border: 0; border-radius: 999px; appearance: none; background: var(--color-toggle-off); cursor: pointer; transition: background 160ms ease; }
-.automation-controls input::after { position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--color-surface); box-shadow: 0 1px 3px rgb(21 32 52 / 20%); content: ''; transition: transform 160ms ease; }
-.automation-controls input:checked { background: var(--color-accent); }
-.automation-controls input:checked::after { transform: translateX(14px); }
-.automation-controls input:disabled { cursor: wait; }
+.automation-controls input[type='checkbox'] { position: relative; flex: 0 0 auto; width: 36px; height: 22px; margin: 0; border: 0; border-radius: 999px; appearance: none; background: var(--color-toggle-off); cursor: pointer; transition: background 160ms ease; }
+.automation-controls input[type='checkbox']::after { position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--color-surface); box-shadow: 0 1px 3px rgb(21 32 52 / 20%); content: ''; transition: transform 160ms ease; }
+.automation-controls input[type='checkbox']:checked { background: var(--color-accent); }
+.automation-controls input[type='checkbox']:checked::after { transform: translateX(14px); }
+.automation-controls input[type='checkbox']:disabled { cursor: wait; }
+
+.grouping-more { padding: 0 0 8px; border-top: 0; background: transparent; }
+.grouping-more summary { padding: 0 0 8px; color: var(--color-accent); font-size: 12px; font-weight: 600; line-height: 1.2; cursor: pointer; list-style: none; }
+.grouping-more summary::-webkit-details-marker,
+.grouping-more summary::marker { display: none; content: ''; }
+.grouping-more-body { display: grid; gap: 4px; padding: 0; }
+.grouping-mode-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; min-width: 0; margin: 0 0 4px; padding: 0; border: 0; }
+.grouping-mode-options label { display: flex; min-width: 0; min-height: 28px; gap: 5px; align-items: center; justify-content: center; border: 1px solid var(--color-border-strong); border-radius: 7px; color: var(--color-body); background: var(--color-surface); font-size: 11px; cursor: pointer; }
+.grouping-mode-options label:has(input:checked) { border-color: var(--color-accent); color: var(--color-accent); background: var(--color-accent-soft); }
+.grouping-mode-options input { width: 12px; height: 12px; margin: 0; accent-color: var(--color-accent); }
+.grouping-field { display: grid; }
+.grouping-field textarea { width: 100%; min-height: 68px; padding: 8px 10px; border: 1px solid var(--color-border-strong); border-radius: 9px; color: var(--color-ink); background: var(--color-surface); font-size: 12px; line-height: 1.45; resize: none; }
+.grouping-field textarea:focus { border-color: var(--color-focus); outline: 0; box-shadow: 0 0 0 3px var(--color-focus-soft); }
+.grouping-field textarea[aria-invalid='true'] { border-color: var(--color-error); }
+.grouping-save-row { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.grouping-save-row p { flex: 1 1 auto; min-width: 0; color: var(--color-muted); font-size: 10px; font-weight: 400; line-height: 1.4; white-space: nowrap; }
+.grouping-save-row > button { flex: 0 0 auto; min-height: 28px; padding: 0 10px; border: 0; border-radius: 6px; color: var(--color-on-accent); background: var(--color-accent); font-size: 11px; font-weight: 700; cursor: pointer; }
+.grouping-save-row > button:hover { background: var(--color-accent-strong); }
+.grouping-save-row > button:disabled { background: var(--color-toggle-off); color: var(--color-muted); }
 
 .search-results { margin-top: 11px; }
 .result-count { padding: 2px 2px 9px; color: var(--color-muted); font-size: 10px; }
@@ -78,16 +98,38 @@ h1 { font-size: 15px; font-weight: 700; line-height: 1.25; letter-spacing: -0.02
 .search-results button small { margin-top: 4px; color: var(--color-muted); font-size: 10px; }
 .empty-state { padding: 23px 2px 13px; color: var(--color-muted); font-size: 11px; line-height: 1.6; }
 
-.notice { margin-top: 9px; padding: 9px 11px; border-radius: 9px; font-size: 11px; line-height: 1.45; }
+.notice { display: flex; gap: 8px; align-items: center; justify-content: space-between; margin-top: 9px; padding: 8px 8px 8px 11px; border-radius: 9px; font-size: 11px; line-height: 1.45; }
 .notice.success { color: var(--color-success); background: var(--color-success-soft); }
 .notice.error { color: var(--color-error); background: var(--color-error-soft); }
+.notice-dismiss { display: grid; flex: 0 0 auto; width: 22px; height: 22px; padding: 0; place-items: center; border: 0; border-radius: 8px; color: inherit; background: transparent; cursor: pointer; opacity: 0.72; }
+.notice-dismiss:hover { background: rgb(21 32 52 / 6%); opacity: 1; }
+.notice-dismiss svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-width: 1.7; }
 
 .footer-bar { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-top: 7px; padding-top: 7px; }
 .footer-bar button { min-height: 38px; padding: 0 5px; border: 0; color: var(--color-muted); background: transparent; font-size: 11px; cursor: pointer; transition: color 150ms ease; }
 .footer-bar button:hover { color: var(--color-accent); }
 .footer-bar .undo-button { color: var(--color-accent); font-weight: 650; }
 
-button:focus-visible, input:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.grouping-config-open {
+  padding-top: 11px;
+  padding-bottom: 8px;
+}
+.grouping-config-open .search-box { margin-top: 8px; }
+.grouping-config-open .quick-status {
+  margin-top: 8px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+.grouping-config-open .automation-controls > label,
+.grouping-config-open .grouping-setting > label { min-height: 42px; }
+.grouping-config-open .automation-controls .described-setting { min-height: 52px; }
+.grouping-config-open .footer-bar {
+  margin-top: 4px;
+  padding-top: 4px;
+}
+.grouping-config-open .footer-bar button { min-height: 32px; }
+
+button:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
 button:disabled { cursor: wait; opacity: 0.55; }
 
 @media (prefers-reduced-motion: reduce) {

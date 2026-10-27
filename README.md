@@ -26,7 +26,7 @@
 
 - **重复标签拦截**：再次打开相同地址时切回原标签，并对用户明确复制的场景提供例外。
 - **一键清理已有重复标签**：批量去重，并保留撤销能力。
-- **按域名分组**：可手动启用自动分组，保留用户自定义名称；关闭开关时解除当前分组。
+- **按域名分组**：可手动启用自动分组，并选择按全域名、二级域名或三级域名整理；「更多配置」中的 `*.xxx.com` 自定义规则优先级最高，可把指定主域名下的子域收进同一组。`www` 与主站默认合并，用户自定义组名会被保留；关闭开关时解除当前分组。
 - **跨窗口搜索**：在弹窗中搜索并切换到任意已打开标签。
 - **标签侧边栏**：以 Chrome 原生侧边栏展示分组和未分组标签，悬停标签行即可点击关闭。
 - **安全归档**：默认以 3 天为闲置阈值，先保存本地记录再关闭，可搜索和恢复。
@@ -128,7 +128,7 @@ pnpm zip         # 生成可分发压缩包
 
 ## English overview
 
-Tab Caretaker is a local-first Chrome extension for people who work with many tabs. It prevents accidental duplicates, groups tabs by domain, searches across windows, provides a native side-panel view, and archives inactive tabs locally before closing them.
+Tab Caretaker is a local-first Chrome extension for people who work with many tabs. It prevents accidental duplicates, groups tabs by hostname (with optional parent-domain rules), searches across windows, provides a native side-panel view, and archives inactive tabs locally before closing them.
 
 **[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/tab-caretaker/bdegmnmphdkbnooonojbhobpiipgfncb)** for automatic updates. Prebuilt ZIP packages are also available on [GitHub Releases](https://github.com/halvee-tech/tab-caretaker/releases/latest) for manual installation in developer mode. Release and store versions may differ while an update is under review.
 

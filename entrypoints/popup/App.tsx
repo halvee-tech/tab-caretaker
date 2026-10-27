@@ -14,8 +14,17 @@ import {
   STORAGE_KEY,
   type CaretakerState,
 } from '@/lib/storage-schema';
+import {
+  formatGroupingParentDomains,
+  isGroupingParentDomain,
+  type GroupingMode,
+} from '@/lib/grouping';
 import { getHostname } from '@/lib/url-normalization';
 import './App.css';
+
+function toLines(value: string): string[] {
+  return [...new Set(value.split(/[\r\n;；]+/).map((item) => item.trim()).filter(Boolean))];
+}
 
 const EMPTY_INSIGHTS: TabInsights = {
   duplicateCount: 0,
@@ -42,6 +51,11 @@ function App() {
   const [savingSetting, setSavingSetting] = useState<string | null>(null);
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
   const [notice, setNotice] = useState<Notice>(null);
+  const [groupingConfigOpen, setGroupingConfigOpen] = useState(false);
+  const [groupingModeDraft, setGroupingModeDraft] =
+    useState<GroupingMode>('hostname');
+  const [groupingDraft, setGroupingDraft] = useState('');
+  const [groupingDirty, setGroupingDirty] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const scanTabs = useCallback(async () => {
@@ -92,6 +106,22 @@ function App() {
   useEffect(() => {
     if (status === 'ready') searchInputRef.current?.focus();
   }, [status]);
+
+  useEffect(() => {
+    if (groupingDirty) return;
+    setGroupingModeDraft(state.settings.groupingMode);
+    setGroupingDraft(formatGroupingParentDomains(state.settings.groupingParentDomains));
+  }, [
+    groupingDirty,
+    state.settings.groupingMode,
+    state.settings.groupingParentDomains,
+  ]);
+
+  useEffect(() => {
+    if (!notice || notice.kind !== 'success') return;
+    const timer = window.setTimeout(() => setNotice(null), 3000);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
 
   useEffect(() => {
     if (currentWindowId === undefined) return;
@@ -218,6 +248,46 @@ function App() {
     }
   }, [scanTabs, state.settings]);
 
+  const saveGroupingParentDomains = useCallback(async () => {
+    const groupingParentDomains = toLines(groupingDraft);
+    const invalidParentDomain = groupingParentDomains.find(
+      (value) => !isGroupingParentDomain(value),
+    );
+    if (invalidParentDomain) {
+      setNotice({ kind: 'error', text: `主域名格式不正确：${invalidParentDomain}` });
+      return;
+    }
+    const previousSettings = state.settings;
+    const nextSettings = {
+      ...previousSettings,
+      groupingMode: groupingModeDraft,
+      groupingParentDomains,
+    };
+    setSavingSetting('groupingParentDomains');
+    setNotice(null);
+    setState((current) => ({ ...current, settings: nextSettings }));
+    try {
+      const response = await sendMessage({ settings: nextSettings, type: 'UPDATE_SETTINGS' });
+      if (!response.ok) throw new Error(response.error || '保存失败');
+      setGroupingDirty(false);
+      await scanTabs();
+      setNotice({
+        kind: 'success',
+        text: groupingParentDomains.length
+          ? `已保存分组方式和 ${groupingParentDomains.length} 条自定义域名。`
+          : '已保存分组方式。',
+      });
+    } catch (error) {
+      setState((current) => ({ ...current, settings: previousSettings }));
+      setNotice({
+        kind: 'error',
+        text: error instanceof Error ? error.message : '保存失败，请重试。',
+      });
+    } finally {
+      setSavingSetting(null);
+    }
+  }, [groupingDraft, groupingModeDraft, scanTabs, state.settings]);
+
   const toggleSidePanel = useCallback(async (open: boolean) => {
     if (currentWindowId === undefined) return;
     const previousSettings = state.settings;
@@ -282,7 +352,10 @@ function App() {
   }, [currentWindowId, state.settings]);
 
   return (
-    <main className="app" aria-busy={status === 'loading'}>
+    <main
+      className={`app${groupingConfigOpen ? ' grouping-config-open' : ''}`}
+      aria-busy={status === 'loading'}
+    >
       <header className="topbar">
         <div className="brand-mark" aria-hidden="true"><span /><span /><span /></div>
         <div className="brand-copy">
@@ -358,7 +431,68 @@ function App() {
 
           <section className="automation-controls" aria-label="功能设置" aria-busy={savingSetting !== null}>
             <label><span>拦截重复</span><input type="checkbox" checked={state.settings.duplicateGuardEnabled} disabled={savingSetting !== null} onChange={(event) => void toggleAutomation('duplicateGuardEnabled', event.target.checked)} /></label>
-            <label><span>自动分组</span><input type="checkbox" checked={state.settings.autoGroupEnabled} disabled={savingSetting !== null} onChange={(event) => void toggleAutomation('autoGroupEnabled', event.target.checked)} /></label>
+            <div className="grouping-setting">
+              <label><span>自动分组</span><input type="checkbox" checked={state.settings.autoGroupEnabled} disabled={savingSetting !== null} onChange={(event) => void toggleAutomation('autoGroupEnabled', event.target.checked)} /></label>
+              {state.settings.autoGroupEnabled && (
+                <details
+                  className="grouping-more"
+                  open={groupingConfigOpen}
+                  onToggle={(event) => setGroupingConfigOpen(event.currentTarget.open)}
+                >
+                  <summary>{groupingConfigOpen ? '收起配置' : '更多配置'}</summary>
+                  <div className="grouping-more-body">
+                    <fieldset className="grouping-mode-options">
+                      <legend className="sr-only">默认分组方式</legend>
+                      {([
+                        ['hostname', '全域名'],
+                        ['registrable-domain', '二级域名'],
+                        ['third-level-domain', '三级域名'],
+                      ] as const).map(([mode, label]) => (
+                        <label key={mode}>
+                          <input
+                            type="radio"
+                            name="grouping-mode"
+                            value={mode}
+                            checked={groupingModeDraft === mode}
+                            disabled={savingSetting !== null}
+                            onChange={() => {
+                              setGroupingModeDraft(mode);
+                              setGroupingDirty(true);
+                            }}
+                          />
+                          <span>{label}</span>
+                        </label>
+                      ))}
+                    </fieldset>
+                    <label className="grouping-field">
+                      <span className="sr-only">合并这些主域名下的子域</span>
+                      <textarea
+                        rows={2}
+                        value={groupingDraft}
+                        disabled={savingSetting !== null}
+                        aria-invalid={Boolean(notice?.kind === 'error' && notice.text.startsWith('主域名格式'))}
+                        aria-describedby="grouping-rules-hint"
+                        placeholder={'合并分组的域名,例如*.xxx.com,多个域名换行/;分割'}
+                        onChange={(event) => {
+                          setGroupingDraft(event.target.value);
+                          setGroupingDirty(true);
+                        }}
+                      />
+                    </label>
+                    <div className="grouping-save-row">
+                      <p id="grouping-rules-hint">自定义配置规则与上方分组方式同时生效</p>
+                      <button
+                        type="button"
+                        disabled={savingSetting !== null || !groupingDirty}
+                        onClick={() => void saveGroupingParentDomains()}
+                      >
+                        {savingSetting === 'groupingParentDomains' ? '保存中…' : '保存规则'}
+                      </button>
+                    </div>
+                  </div>
+                </details>
+              )}
+            </div>
             <label className="described-setting"><span className="setting-copy"><strong>自动归档</strong><small>闲置 {state.settings.staleAfterDays} 天后归档并关闭，可恢复</small></span><input type="checkbox" checked={state.settings.archiveEnabled} disabled={savingSetting !== null} onChange={(event) => void toggleAutomation('archiveEnabled', event.target.checked)} /></label>
             <label><span>标签侧边栏</span><input type="checkbox" checked={sidePanelOpen} disabled={savingSetting !== null} onChange={(event) => void toggleSidePanel(event.target.checked)} /></label>
           </section>
@@ -366,7 +500,12 @@ function App() {
       )}
 
       {notice && status !== 'error' && (
-        <p className={`notice ${notice.kind}`} role={notice.kind === 'error' ? 'alert' : 'status'}>{notice.text}</p>
+        <div className={`notice ${notice.kind}`} role={notice.kind === 'error' ? 'alert' : 'status'}>
+          <span>{notice.text}</span>
+          <button type="button" className="notice-dismiss" aria-label="关闭提示" onClick={() => setNotice(null)}>
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 4 8 8M12 4 4 12" /></svg>
+          </button>
+        </div>
       )}
 
       {status === 'ready' && (
