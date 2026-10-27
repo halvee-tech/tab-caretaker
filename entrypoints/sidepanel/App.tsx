@@ -135,8 +135,23 @@ function App() {
     }
   }, [refresh]);
 
+  const closeTab = useCallback(async (tab: Browser.tabs.Tab) => {
+    if (tab.id === undefined) return;
+    setBusyTabId(tab.id);
+    setActionError(undefined);
+    try {
+      await browser.tabs.remove(tab.id);
+      await refresh();
+    } catch {
+      setActionError('无法关闭标签，请重试。');
+      await refresh();
+    } finally {
+      setBusyTabId(undefined);
+    }
+  }, [refresh]);
+
   const renderTab = (tab: Browser.tabs.Tab) => (
-    <li key={tab.id ?? `${tab.windowId}-${tab.index}`}>
+    <li className={`tab-item${tab.active ? ' active' : ''}`} key={tab.id ?? `${tab.windowId}-${tab.index}`}>
       <button
         className={`tab-row${tab.active ? ' active' : ''}`}
         type="button"
@@ -157,6 +172,16 @@ function App() {
         {tab.audible && (
           <svg className="audio-icon" viewBox="0 0 24 24" aria-label="正在播放声音"><path d="M5 9v6h4l5 4V5L9 9H5Z" /><path d="M17 9a4 4 0 0 1 0 6" /></svg>
         )}
+      </button>
+      <button
+        className="tab-close"
+        type="button"
+        disabled={tab.id === busyTabId || tab.id === undefined}
+        onClick={() => void closeTab(tab)}
+        aria-label={`关闭标签：${tabLabel(tab)}`}
+        title={`关闭标签：${tabLabel(tab)}`}
+      >
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8" /></svg>
       </button>
     </li>
   );

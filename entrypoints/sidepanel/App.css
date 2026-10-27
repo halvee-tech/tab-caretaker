@@ -43,6 +43,16 @@ h1 { color: var(--color-ink); font-size: 15px; font-weight: 700; line-height: 1.
 
 ul { margin: 0; padding: 0; list-style: none; }
 .tab-group li + li { border-top: 1px solid var(--color-border); }
+.tab-item { position: relative; display: flex; align-items: center; padding-right: 36px; }
+.tab-item.active { background: var(--color-accent-soft); }
+.tab-item:hover, .tab-item:focus-within { background: var(--color-subtle); }
+.tab-item.active:hover, .tab-item.active:focus-within { background: var(--color-accent-soft); }
+.tab-item .tab-row { min-width: 0; }
+.tab-close { position: absolute; right: 4px; display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 6px; color: var(--color-muted); background: transparent; opacity: 0; cursor: pointer; transition: opacity 150ms ease, background 150ms ease, color 150ms ease; }
+.tab-item:hover .tab-close, .tab-item:focus-within .tab-close { opacity: 1; }
+.tab-close:hover { color: var(--color-error); background: var(--color-error-soft); }
+.tab-close svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+@media (hover: none) { .tab-close { opacity: 1; } }
 .tab-row { display: grid; grid-template-columns: 20px minmax(0, 1fr) 17px; gap: 9px; width: 100%; min-height: 52px; padding: 7px 10px; align-items: center; border: 0; color: var(--color-ink); background: transparent; text-align: left; cursor: pointer; transition: color 150ms ease, background 150ms ease; }
 .tab-row:hover { background: var(--color-subtle); }
 .tab-row.active { background: var(--color-accent-soft); }
@@ -65,6 +75,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 .ungrouped-tabs h3 { display: flex; align-items: center; justify-content: space-between; min-height: 31px; padding: 0 7px; color: var(--color-muted); font-size: 10px; font-weight: 650; }
 .ungrouped-tabs h3 small { font-size: 9px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .ungrouped-tabs .tab-row { border-radius: 8px; }
+.ungrouped-tabs .tab-item { border-radius: 8px; }
 .ungrouped-tabs li + li { border-top: 1px solid var(--color-border); }
 
 .panel-state { display: flex; gap: 10px; min-height: 150px; padding: 34px 16px; align-items: flex-start; justify-content: center; color: var(--color-muted); font-size: 11px; text-align: center; }
