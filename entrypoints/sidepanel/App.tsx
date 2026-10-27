@@ -22,6 +22,41 @@ function App() {
   const [busyTabId, setBusyTabId] = useState<number>();
   const [actionError, setActionError] = useState<string>();
 
+  useEffect(() => {
+    let active = true;
+    let panelWindowId: number | undefined;
+
+    void browser.windows.getCurrent().then((currentWindow) => {
+      if (!active || currentWindow.id === undefined) return;
+      panelWindowId = currentWindow.id;
+      void browser.runtime
+        .sendMessage({
+          open: true,
+          type: 'SET_SIDE_PANEL_STATE',
+          windowId: panelWindowId,
+        })
+        .catch(() => undefined);
+    });
+
+    const reportClosed = () => {
+      active = false;
+      if (panelWindowId === undefined) return;
+      void browser.runtime
+        .sendMessage({
+          open: false,
+          type: 'SET_SIDE_PANEL_STATE',
+          windowId: panelWindowId,
+        })
+        .catch(() => undefined);
+    };
+
+    window.addEventListener('pagehide', reportClosed);
+    return () => {
+      active = false;
+      window.removeEventListener('pagehide', reportClosed);
+    };
+  }, []);
+
   const refresh = useCallback(async () => {
     try {
       const [nextTabs, nextGroups, currentWindow] = await Promise.all([
