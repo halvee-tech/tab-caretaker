@@ -14,6 +14,8 @@ describe('storage migration', () => {
     expect(state.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(state.settings).toMatchObject({ archiveEnabled: true, staleAfterDays: 30 });
     expect(state.settings.autoGroupEnabled).toBe(DEFAULT_SETTINGS.autoGroupEnabled);
+    expect(state.settings.groupingMode).toBe('hostname');
+    expect(state.settings.groupingParentDomains).toEqual([]);
     expect(state.settings.sidePanelEnabled).toBe(false);
   });
 
@@ -72,6 +74,7 @@ describe('storage migration', () => {
     const state = migrateStoredState({});
     updateUserSettings(state, {
       domainAllowlist: [' Example.COM ', 'example.com', 'docs.example.com'],
+      groupingParentDomains: ['*.XXX.com', 'xxx.com', 'com', 'co.uk'],
       staleAfterDays: 30,
       trackingParameters: ['utm_source', ' utm_source ', 'ref'],
     });
@@ -80,9 +83,29 @@ describe('storage migration', () => {
       autoGroupEnabled: false,
       domainAllowlist: ['example.com', 'docs.example.com'],
       duplicateGuardEnabled: false,
+      groupingMode: 'hostname',
+      groupingParentDomains: ['xxx.com'],
       sidePanelEnabled: false,
       staleAfterDays: 30,
       trackingParameters: ['utm_source', 'ref'],
     });
+  });
+
+  it('persists valid grouping modes and rejects malformed values', () => {
+    const state = migrateStoredState({});
+
+    updateUserSettings(state, {
+      ...state.settings,
+      groupingMode: 'third-level-domain',
+    });
+    expect(state.settings.groupingMode).toBe('third-level-domain');
+
+    const malformed = migrateStoredState({
+      caretakerState: {
+        schemaVersion: CURRENT_SCHEMA_VERSION,
+        settings: { groupingMode: 'unknown-mode' },
+      },
+    });
+    expect(malformed.settings.groupingMode).toBe('hostname');
   });
 });

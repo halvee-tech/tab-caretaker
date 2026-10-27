@@ -6,9 +6,9 @@ import {
 } from '@/lib/duplicate-guard';
 import { getDuplicateCleanupPlan } from '@/lib/deduplication';
 import {
-  getDomainGroupLabel,
   getDomainGroupLabels,
   getDomainGroupPlan,
+  getGroupingKey,
   getManagedGroupTitleUpdate,
 } from '@/lib/grouping';
 import type { CaretakerMessage, CaretakerResponse } from '@/lib/messages';
@@ -283,8 +283,11 @@ async function performGroupByDomain(
   focusTabId?: number,
   recordHistory = true,
 ): Promise<number> {
+  const state = await readState();
+  const parentDomains = state.settings.groupingParentDomains;
+  const groupingMode = state.settings.groupingMode;
   const tabs = await browser.tabs.query({});
-  const plan = getDomainGroupPlan(tabs).filter(
+  const plan = getDomainGroupPlan(tabs, parentDomains, groupingMode).filter(
     (group) => focusTabId === undefined || group.tabIds.includes(focusTabId),
   );
   let affectedCount = 0;
@@ -324,7 +327,9 @@ async function performGroupByDomain(
         : { groupId: group.targetGroupId, tabIds },
     );
     if (group.targetGroupId === undefined) {
-      const title = getDomainGroupLabel(group.hostname);
+      const title =
+        getDomainGroupLabels([group.hostname], parentDomains).get(group.hostname) ??
+        group.hostname;
       await browser.tabGroups.update(groupId, { collapsed: false, title });
       await rememberManagedGroupTitle(groupId, title);
     } else {
@@ -376,6 +381,9 @@ async function removeAllGroups(): Promise<number> {
 }
 
 async function refreshDomainGroupTitles(): Promise<void> {
+  const state = await readState();
+  const parentDomains = state.settings.groupingParentDomains;
+  const groupingMode = state.settings.groupingMode;
   const tabs = await browser.tabs.query({});
   const managedTitles = await readManagedGroupTitles();
   const hostnameByGroupId = new Map<number, string>();
@@ -384,7 +392,12 @@ async function refreshDomainGroupTitles(): Promise<void> {
       continue;
     }
     const hostname = getHostname(tab.url);
-    if (hostname) hostnameByGroupId.set(tab.groupId, hostname);
+    if (hostname) {
+      hostnameByGroupId.set(
+        tab.groupId,
+        getGroupingKey(hostname, parentDomains, groupingMode),
+      );
+    }
   }
   const groups = await Promise.all(
     [...hostnameByGroupId].map(async ([groupId, hostname]) => ({
@@ -400,12 +413,13 @@ async function refreshDomainGroupTitles(): Promise<void> {
   );
   const labels = getDomainGroupLabels(
     managedGroups.map(({ hostname }) => hostname),
+    parentDomains,
   );
   const nextManagedTitles: Record<string, string> = {};
   await Promise.all(
     managedGroups.map(async ({ group, groupId, hostname }) => {
       const managedTitle = managedTitles[String(groupId)]!;
-      const desiredTitle = labels.get(hostname) ?? getDomainGroupLabel(hostname);
+      const desiredTitle = labels.get(hostname) ?? hostname;
       const titleUpdate = getManagedGroupTitleUpdate(
         group.title,
         managedTitle,
@@ -461,7 +475,11 @@ async function updateGroupingBadge(): Promise<void> {
     return;
   }
   const tabs = await browser.tabs.query({});
-  const pendingCount = getDomainGroupPlan(tabs).reduce(
+  const pendingCount = getDomainGroupPlan(
+    tabs,
+    state.settings.groupingParentDomains,
+    state.settings.groupingMode,
+  ).reduce(
     (total, group) => total + group.tabIds.length,
     0,
   );
@@ -839,6 +857,11 @@ export default defineBackground(() => {
           return { ok: true, sidePanelOpen: request.open };
         }
         if (request.type === 'UPDATE_SETTINGS') {
+          const previous = await readState();
+          const previousGroupingRules = JSON.stringify({
+            mode: previous.settings.groupingMode,
+            parentDomains: previous.settings.groupingParentDomains,
+          });
           await updateState((state) => {
             updateUserSettings(state, request.settings);
             recordAction(state, {
@@ -849,6 +872,19 @@ export default defineBackground(() => {
           });
           if (typeof request.settings.sidePanelEnabled === 'boolean') {
             await applySidePanelSetting();
+          }
+          const next = await readState();
+          if (
+            next.settings.autoGroupEnabled &&
+            previousGroupingRules !==
+              JSON.stringify({
+                mode: next.settings.groupingMode,
+                parentDomains: next.settings.groupingParentDomains,
+              })
+          ) {
+            await groupByDomain(undefined, false);
+            await refreshDomainGroupTitles();
+            await updateGroupingBadge();
           }
           return { ok: true };
         }
