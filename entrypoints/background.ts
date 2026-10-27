@@ -14,6 +14,10 @@ import type { CaretakerMessage, CaretakerResponse } from '@/lib/messages';
 import { isDeliberateCurrentPageCopy } from '@/lib/navigation-intent';
 import { isTabProtected } from '@/lib/protection-rules';
 import {
+  getOpenSidePanelWindowIds,
+  SIDE_PANEL_WINDOWS_KEY,
+} from '@/lib/sidepanel-state';
+import {
   addDuplicateIntentExemption,
   consumeDuplicateIntentExemption,
   getManuallyProtectedTabIds,
@@ -41,7 +45,29 @@ const MENU_ARCHIVE = 'tab-caretaker-archive';
 
 let stateUpdateQueue: Promise<void> = Promise.resolve();
 let groupingQueue: Promise<void> = Promise.resolve();
+let sidePanelStateQueue: Promise<void> = Promise.resolve();
 let duplicateFeedbackUntil = 0;
+
+async function readOpenSidePanelWindowIds(): Promise<Set<number>> {
+  const stored = await browser.storage.session.get(SIDE_PANEL_WINDOWS_KEY);
+  return new Set(getOpenSidePanelWindowIds(stored[SIDE_PANEL_WINDOWS_KEY]));
+}
+
+function setSidePanelOpen(windowId: number, open: boolean): Promise<void> {
+  const operation = sidePanelStateQueue.catch(() => undefined).then(async () => {
+    const windowIds = await readOpenSidePanelWindowIds();
+    if (open) windowIds.add(windowId);
+    else windowIds.delete(windowId);
+    await browser.storage.session.set({
+      [SIDE_PANEL_WINDOWS_KEY]: [...windowIds],
+    });
+  });
+  sidePanelStateQueue = operation.then(
+    () => undefined,
+    () => undefined,
+  );
+  return operation;
+}
 
 async function readState(): Promise<CaretakerState> {
   const stored = (await browser.storage.local.get([
@@ -679,6 +705,15 @@ export default defineBackground(() => {
       )
       .catch(() => undefined);
   });
+  browser.windows.onRemoved.addListener((windowId) => {
+    void setSidePanelOpen(windowId, false).catch(() => undefined);
+  });
+  browser.sidePanel.onOpened?.addListener((info) => {
+    void setSidePanelOpen(info.windowId, true).catch(() => undefined);
+  });
+  browser.sidePanel.onClosed?.addListener((info) => {
+    void setSidePanelOpen(info.windowId, false).catch(() => undefined);
+  });
   browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
     if (!message || typeof message !== 'object' || !('type' in message)) return;
     const request = message as CaretakerMessage;
@@ -736,6 +771,17 @@ export default defineBackground(() => {
             addDuplicateIntentExemption(state, request.url, request.source),
           );
           return { ok };
+        }
+        if (request.type === 'GET_SIDE_PANEL_STATE') {
+          const windowIds = await readOpenSidePanelWindowIds();
+          return {
+            ok: true,
+            sidePanelOpen: windowIds.has(request.windowId),
+          };
+        }
+        if (request.type === 'SET_SIDE_PANEL_STATE') {
+          await setSidePanelOpen(request.windowId, request.open);
+          return { ok: true, sidePanelOpen: request.open };
         }
         if (request.type === 'UPDATE_SETTINGS') {
           await updateState((state) => {

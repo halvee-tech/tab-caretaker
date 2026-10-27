@@ -2,6 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { isUndoableAction } from '@/lib/archive';
 import { getDuplicateCleanupPlan } from '@/lib/deduplication';
 import type { CaretakerMessage, CaretakerResponse } from '@/lib/messages';
+import {
+  isSidePanelOpenInWindow,
+  SIDE_PANEL_WINDOWS_KEY,
+} from '@/lib/sidepanel-state';
 import { getManuallyProtectedTabIds } from '@/lib/tab-activity';
 import { getTabInsights, type TabInsights } from '@/lib/tab-insights';
 import {
@@ -36,6 +40,7 @@ function App() {
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [savingSetting, setSavingSetting] = useState<string | null>(null);
+  const [sidePanelOpen, setSidePanelOpen] = useState(false);
   const [notice, setNotice] = useState<Notice>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -49,12 +54,20 @@ function App() {
         browser.windows.getCurrent(),
       ]);
       const nextState = migrateStoredState(stored as Record<string, unknown>);
+      const sidePanelState =
+        currentWindow.id === undefined
+          ? undefined
+          : await sendMessage({
+              type: 'GET_SIDE_PANEL_STATE',
+              windowId: currentWindow.id,
+            });
       const protectionOptions = {
         domainAllowlist: nextState.settings.domainAllowlist,
         manuallyProtectedTabIds: getManuallyProtectedTabIds(nextState.tabActivity),
       };
       setTabs(openTabs);
       setCurrentWindowId(currentWindow.id);
+      setSidePanelOpen(sidePanelState?.sidePanelOpen === true);
       setState(nextState);
       setInsights(
         getTabInsights(
@@ -79,6 +92,23 @@ function App() {
   useEffect(() => {
     if (status === 'ready') searchInputRef.current?.focus();
   }, [status]);
+
+  useEffect(() => {
+    if (currentWindowId === undefined) return;
+    const handleStorageChange = (
+      changes: Record<string, Browser.storage.StorageChange>,
+      areaName: string,
+    ) => {
+      if (areaName !== 'session') return;
+      const sidePanelChange = changes[SIDE_PANEL_WINDOWS_KEY];
+      if (!sidePanelChange) return;
+      setSidePanelOpen(
+        isSidePanelOpenInWindow(sidePanelChange.newValue, currentWindowId),
+      );
+    };
+    browser.storage.onChanged.addListener(handleStorageChange);
+    return () => browser.storage.onChanged.removeListener(handleStorageChange);
+  }, [currentWindowId]);
 
   const deduplicationPlan = useMemo(
     () =>
@@ -150,8 +180,7 @@ function App() {
     key:
       | 'archiveEnabled'
       | 'autoGroupEnabled'
-      | 'duplicateGuardEnabled'
-      | 'sidePanelEnabled',
+      | 'duplicateGuardEnabled',
     value: boolean,
   ) => {
     const previousSettings = state.settings;
@@ -160,24 +189,11 @@ function App() {
     setNotice(null);
     setState((current) => ({ ...current, settings: nextSettings }));
     try {
-      const sidePanelRequest =
-        key === 'sidePanelEnabled'
-          ? value
-            ? Promise.all([
-                browser.sidePanel.setOptions({ enabled: true, path: 'sidepanel.html' }),
-                // Chrome requires open() to be invoked before the first await
-                // so it remains inside the switch click's user gesture.
-                browser.sidePanel.open({
-                  windowId: currentWindowId!,
-                }),
-              ])
-            : browser.sidePanel.setOptions({ enabled: false, path: 'sidepanel.html' })
-          : Promise.resolve();
-      const [response] = await Promise.all([sendMessage(
+      const response = await sendMessage(
         key === 'autoGroupEnabled'
           ? { enabled: value, type: 'SET_AUTO_GROUPING' }
           : { settings: nextSettings, type: 'UPDATE_SETTINGS' },
-      ), sidePanelRequest]);
+      );
       if (!response.ok) throw new Error(response.error || '保存失败');
       await scanTabs();
       setNotice({
@@ -187,27 +203,11 @@ function App() {
             ? value
               ? `已整理 ${response.affectedCount ?? 0} 个标签，后续新标签将自动分组。`
               : `已解除 ${response.affectedCount ?? 0} 个标签的分组。`
-            : key === 'sidePanelEnabled'
-              ? value
-                ? '标签侧边栏已打开。'
-                : '标签侧边栏已关闭。'
             : value
               ? '功能已启用。'
               : '功能已关闭。',
       });
     } catch (error) {
-      if (key === 'sidePanelEnabled') {
-        await sendMessage({
-          settings: previousSettings,
-          type: 'UPDATE_SETTINGS',
-        }).catch(() => undefined);
-        await browser.sidePanel
-          .setOptions({
-            enabled: previousSettings.sidePanelEnabled,
-            path: 'sidepanel.html',
-          })
-          .catch(() => undefined);
-      }
       setState((current) => ({ ...current, settings: previousSettings }));
       setNotice({
         kind: 'error',
@@ -216,7 +216,70 @@ function App() {
     } finally {
       setSavingSetting(null);
     }
-  }, [currentWindowId, scanTabs, state.settings]);
+  }, [scanTabs, state.settings]);
+
+  const toggleSidePanel = useCallback(async (open: boolean) => {
+    if (currentWindowId === undefined) return;
+    const previousSettings = state.settings;
+    const nextSettings = { ...previousSettings, sidePanelEnabled: open };
+    setSavingSetting('sidePanelEnabled');
+    setNotice(null);
+    setSidePanelOpen(open);
+    setState((current) => ({ ...current, settings: nextSettings }));
+
+    try {
+      // Chrome requires open() to be invoked during the switch click's user gesture.
+      const panelAction = open
+        ? Promise.all([
+            browser.sidePanel.setOptions({ enabled: true, path: 'sidepanel.html' }),
+            browser.sidePanel.open({ windowId: currentWindowId }),
+          ])
+        : Promise.all([
+            browser.sidePanel.setOptions({ enabled: false, path: 'sidepanel.html' }),
+            typeof browser.sidePanel.close === 'function'
+              ? browser.sidePanel.close({ windowId: currentWindowId })
+              : Promise.resolve(),
+          ]);
+      const [response] = await Promise.all([
+        sendMessage({ settings: nextSettings, type: 'UPDATE_SETTINGS' }),
+        panelAction,
+        sendMessage({
+          open,
+          type: 'SET_SIDE_PANEL_STATE',
+          windowId: currentWindowId,
+        }),
+      ]);
+      if (!response.ok) throw new Error(response.error || '保存失败');
+      setNotice({
+        kind: 'success',
+        text: open ? '标签侧边栏已打开。' : '标签侧边栏已关闭。',
+      });
+    } catch (error) {
+      await sendMessage({
+        settings: previousSettings,
+        type: 'UPDATE_SETTINGS',
+      }).catch(() => undefined);
+      await browser.sidePanel
+        .setOptions({
+          enabled: previousSettings.sidePanelEnabled,
+          path: 'sidepanel.html',
+        })
+        .catch(() => undefined);
+      await sendMessage({
+        open: !open,
+        type: 'SET_SIDE_PANEL_STATE',
+        windowId: currentWindowId,
+      }).catch(() => undefined);
+      setState((current) => ({ ...current, settings: previousSettings }));
+      setSidePanelOpen(!open);
+      setNotice({
+        kind: 'error',
+        text: error instanceof Error ? error.message : '侧边栏操作失败，请重试。',
+      });
+    } finally {
+      setSavingSetting(null);
+    }
+  }, [currentWindowId, state.settings]);
 
   return (
     <main className="app" aria-busy={status === 'loading'}>
@@ -297,7 +360,7 @@ function App() {
             <label><span>拦截重复</span><input type="checkbox" checked={state.settings.duplicateGuardEnabled} disabled={savingSetting !== null} onChange={(event) => void toggleAutomation('duplicateGuardEnabled', event.target.checked)} /></label>
             <label><span>自动分组</span><input type="checkbox" checked={state.settings.autoGroupEnabled} disabled={savingSetting !== null} onChange={(event) => void toggleAutomation('autoGroupEnabled', event.target.checked)} /></label>
             <label className="described-setting"><span className="setting-copy"><strong>自动归档</strong><small>闲置 {state.settings.staleAfterDays} 天后归档并关闭，可恢复</small></span><input type="checkbox" checked={state.settings.archiveEnabled} disabled={savingSetting !== null} onChange={(event) => void toggleAutomation('archiveEnabled', event.target.checked)} /></label>
-            <label><span>标签侧边栏</span><input type="checkbox" checked={state.settings.sidePanelEnabled} disabled={savingSetting !== null} onChange={(event) => void toggleAutomation('sidePanelEnabled', event.target.checked)} /></label>
+            <label><span>标签侧边栏</span><input type="checkbox" checked={sidePanelOpen} disabled={savingSetting !== null} onChange={(event) => void toggleSidePanel(event.target.checked)} /></label>
           </section>
         </>
       )}
