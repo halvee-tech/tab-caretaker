@@ -44,6 +44,21 @@ export type DomainGroupPlan = {
   windowId: number;
 };
 
+/**
+ * Returns a new automatic title only while the group still has the last title
+ * assigned by Tab Caretaker. A different current title belongs to the user.
+ */
+export function getManagedGroupTitleUpdate(
+  currentTitle: string | undefined,
+  lastManagedTitle: string | undefined,
+  desiredTitle: string,
+): string | undefined {
+  if (lastManagedTitle === undefined || currentTitle !== lastManagedTitle) {
+    return undefined;
+  }
+  return currentTitle === desiredTitle ? undefined : desiredTitle;
+}
+
 export function getDomainGroupLabel(hostname: string): string {
   const normalized = hostname.toLowerCase().replace(/^\[|\]$/g, '');
   if (
