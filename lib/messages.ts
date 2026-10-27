@@ -39,10 +39,20 @@ export type CaretakerMessage =
       source: 'address-paste' | 'duplicate-command' | 'user-action';
       type: 'GRANT_DUPLICATE_EXEMPTION';
       url: string;
+    }
+  | {
+      type: 'GET_SIDE_PANEL_STATE';
+      windowId: number;
+    }
+  | {
+      open: boolean;
+      type: 'SET_SIDE_PANEL_STATE';
+      windowId: number;
     };
 
 export type CaretakerResponse = {
   affectedCount?: number;
   error?: string;
   ok: boolean;
+  sidePanelOpen?: boolean;
 };
