@@ -9,6 +9,7 @@ import {
   getDomainGroupLabel,
   getDomainGroupLabels,
   getDomainGroupPlan,
+  getManagedGroupTitleUpdate,
 } from '@/lib/grouping';
 import type { CaretakerMessage, CaretakerResponse } from '@/lib/messages';
 import { isDeliberateCurrentPageCopy } from '@/lib/navigation-intent';
@@ -42,11 +43,35 @@ const MAINTENANCE_ALARM = 'tab-caretaker-maintenance';
 const MENU_DUPLICATE = 'tab-caretaker-duplicate';
 const MENU_PROTECT = 'tab-caretaker-protect';
 const MENU_ARCHIVE = 'tab-caretaker-archive';
+const MANAGED_GROUP_TITLES_KEY = 'managedGroupTitles';
 
 let stateUpdateQueue: Promise<void> = Promise.resolve();
 let groupingQueue: Promise<void> = Promise.resolve();
 let sidePanelStateQueue: Promise<void> = Promise.resolve();
 let duplicateFeedbackUntil = 0;
+
+function sanitizeManagedGroupTitles(value: unknown): Record<string, string> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value).filter(
+      ([groupId, title]) => /^\d+$/.test(groupId) && typeof title === 'string',
+    ),
+  );
+}
+
+async function readManagedGroupTitles(): Promise<Record<string, string>> {
+  const stored = await browser.storage.session.get(MANAGED_GROUP_TITLES_KEY);
+  return sanitizeManagedGroupTitles(stored[MANAGED_GROUP_TITLES_KEY]);
+}
+
+async function rememberManagedGroupTitle(
+  groupId: number,
+  title: string,
+): Promise<void> {
+  const titles = await readManagedGroupTitles();
+  titles[String(groupId)] = title;
+  await browser.storage.session.set({ [MANAGED_GROUP_TITLES_KEY]: titles });
+}
 
 async function readOpenSidePanelWindowIds(): Promise<Set<number>> {
   const stored = await browser.storage.session.get(SIDE_PANEL_WINDOWS_KEY);
@@ -298,10 +323,13 @@ async function performGroupByDomain(
         ? { createProperties: { windowId: group.windowId }, tabIds }
         : { groupId: group.targetGroupId, tabIds },
     );
-    await browser.tabGroups.update(groupId, {
-      collapsed: false,
-      title: getDomainGroupLabel(group.hostname),
-    });
+    if (group.targetGroupId === undefined) {
+      const title = getDomainGroupLabel(group.hostname);
+      await browser.tabGroups.update(groupId, { collapsed: false, title });
+      await rememberManagedGroupTitle(groupId, title);
+    } else {
+      await browser.tabGroups.update(groupId, { collapsed: false });
+    }
     affectedCount += tabIds.length;
     if (recordHistory) {
       await updateState((state) => {
@@ -349,6 +377,7 @@ async function removeAllGroups(): Promise<number> {
 
 async function refreshDomainGroupTitles(): Promise<void> {
   const tabs = await browser.tabs.query({});
+  const managedTitles = await readManagedGroupTitles();
   const hostnameByGroupId = new Map<number, string>();
   for (const tab of tabs) {
     if (tab.groupId === undefined || tab.groupId < 0 || hostnameByGroupId.has(tab.groupId)) {
@@ -357,14 +386,40 @@ async function refreshDomainGroupTitles(): Promise<void> {
     const hostname = getHostname(tab.url);
     if (hostname) hostnameByGroupId.set(tab.groupId, hostname);
   }
-  const labels = getDomainGroupLabels([...hostnameByGroupId.values()]);
+  const groups = await Promise.all(
+    [...hostnameByGroupId].map(async ([groupId, hostname]) => ({
+      group: await browser.tabGroups.get(groupId),
+      groupId,
+      hostname,
+    })),
+  );
+  const managedGroups = groups.filter(
+    ({ group, groupId }) =>
+      managedTitles[String(groupId)] !== undefined &&
+      group.title === managedTitles[String(groupId)],
+  );
+  const labels = getDomainGroupLabels(
+    managedGroups.map(({ hostname }) => hostname),
+  );
+  const nextManagedTitles: Record<string, string> = {};
   await Promise.all(
-    [...hostnameByGroupId].map(async ([groupId, hostname]) => {
-      const group = await browser.tabGroups.get(groupId);
-      const title = labels.get(hostname) ?? getDomainGroupLabel(hostname);
-      if (group.title !== title) await browser.tabGroups.update(groupId, { title });
+    managedGroups.map(async ({ group, groupId, hostname }) => {
+      const managedTitle = managedTitles[String(groupId)]!;
+      const desiredTitle = labels.get(hostname) ?? getDomainGroupLabel(hostname);
+      const titleUpdate = getManagedGroupTitleUpdate(
+        group.title,
+        managedTitle,
+        desiredTitle,
+      );
+      if (titleUpdate !== undefined) {
+        await browser.tabGroups.update(groupId, { title: titleUpdate });
+      }
+      nextManagedTitles[String(groupId)] = titleUpdate ?? managedTitle;
     }),
   );
+  await browser.storage.session.set({
+    [MANAGED_GROUP_TITLES_KEY]: nextManagedTitles,
+  });
 }
 
 async function setAutoGrouping(enabled: boolean): Promise<number> {

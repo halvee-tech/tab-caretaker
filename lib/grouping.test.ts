@@ -3,6 +3,7 @@ import {
   getDomainGroupLabel,
   getDomainGroupLabels,
   getDomainGroupPlan,
+  getManagedGroupTitleUpdate,
 } from './grouping';
 
 describe('domain group labels', () => {
@@ -107,5 +108,25 @@ describe('domain grouping', () => {
         windowId: 1,
       },
     ]);
+  });
+});
+
+describe('managed group titles', () => {
+  it('updates a title that still matches the last automatic title', () => {
+    expect(getManagedGroupTitleUpdate('example', 'example', 'example-docs')).toBe(
+      'example-docs',
+    );
+  });
+
+  it('preserves a title changed by the user', () => {
+    expect(getManagedGroupTitleUpdate('工作资料', 'example', 'example-docs')).toBe(
+      undefined,
+    );
+  });
+
+  it('does not claim ownership of an existing untracked group', () => {
+    expect(getManagedGroupTitleUpdate('example', undefined, 'example-docs')).toBe(
+      undefined,
+    );
   });
 });
