@@ -5,6 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-3458e6.svg)](LICENSE)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Manifest_V3-3458e6.svg)](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3)
 [![Chrome Web Store](https://img.shields.io/badge/Chrome_Web_Store-安装扩展-3458e6?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/tab-caretaker/bdegmnmphdkbnooonojbhobpiipgfncb)
+[![L 站](https://img.shields.io/badge/L%E7%AB%99-linux.do-ff7d00?logo=discourse&logoColor=white)](https://linux.do/)
 
 一个本地优先的 Chrome 标签管理扩展：拦截无意产生的重复标签、按域名整理标签、跨窗口搜索，并在关闭长期闲置页面前安全归档。
 
@@ -112,6 +113,12 @@ pnpm zip         # 生成可分发压缩包
 
 维护者推送与 `package.json` 版本一致的 `v*` 标签后，GitHub Actions 会自动执行类型检查、测试和 Chrome 打包，并创建包含 ZIP、校验文件及自动生成说明的 GitHub Release。发布步骤记录在 [贡献指南](CONTRIBUTING.md#发布流程维护者)。
 
+## 社区讨论
+
+项目在 [L 站（linux.do）](https://linux.do/) 有分享与讨论帖，欢迎在那里聊使用体验、提建议或反馈问题；也可以在 [GitHub Issues](https://github.com/halvee-tech/tab-caretaker/issues) 提交。
+
+<!-- TODO: L 站帖子发布后，把本节的 linux.do 首页链接替换为具体 topic 链接（含顶部徽章与 English overview）。 -->
+
 ## 参与贡献
 
 欢迎提交 Bug、建议和 Pull Request。开始前请阅读：
@@ -133,3 +140,5 @@ Tab Caretaker is a local-first Chrome extension for people who work with many ta
 **[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/tab-caretaker/bdegmnmphdkbnooonojbhobpiipgfncb)** for automatic updates. Prebuilt ZIP packages are also available on [GitHub Releases](https://github.com/halvee-tech/tab-caretaker/releases/latest) for manual installation in developer mode. Release and store versions may differ while an update is under review.
 
 Automation that changes browser state is disabled by default. The extension does not inject content scripts or read page contents. See [CONTRIBUTING.md](CONTRIBUTING.md) to contribute and [LICENSE](LICENSE) for the MIT terms.
+
+Community discussion also happens on [Linux.do](https://linux.do/).
